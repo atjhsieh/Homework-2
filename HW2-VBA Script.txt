@@ -1,0 +1,72 @@
+Sub stocks()
+'Declare variables
+Dim l As Long
+Dim ticker As String
+Dim total As Double
+Dim summarytable As Integer
+Dim cl, op, y, pct As Double
+
+On Error Resume Next
+For s = 1 To 3
+Sheets(s).Activate
+'Select range in column A
+Range("A2").Select
+Range(Selection, Selection.End(xlDown)).Select
+
+'Count line items and define variables
+l = Selection.Count + 1
+total = 0
+summarytable = 2
+op = Range("C2").Value ' y is the opening price at the beginning of the year
+Range("I1").Value = "Ticker"
+Range("L1").Value = "Total Stock Volume"
+Range("J1").Value = "Yearly Change"
+Range("K1").Value = "Percent Change"
+
+'Loop through stock ticker
+For i = 2 To l + 1
+    If Cells(i + 1, 1).Value <> Cells(i, 1).Value Then
+        ticker = Cells(i, 1).Value
+        total = total + Cells(i, 7).Value
+        cl = Range("F" & i).Value
+        y = cl - op
+        pct = (cl - op) / op
+        Range("I" & summarytable).Value = ticker
+        Range("L" & summarytable).Value = total
+        Range("J" & summarytable).Value = y
+        Range("K" & summarytable).Value = pct
+        summarytable = summarytable + 1
+        total = 0
+        op = Range("C" & i + 1).Value
+    Else
+        total = total + Cells(i, 7).Value
+        cl = Range("F" & l).Value
+    End If
+Next i
+
+'Fix Formatting
+Columns("J").NumberFormat = "0.000000000"
+Columns("K").NumberFormat = "0.00%"
+'Highlight Yearly Change
+    Range("J2" & ":" & "J" & summarytable).Select
+    Selection.FormatConditions.Add Type:=xlCellValue, Operator:=xlGreater, _
+        Formula1:="=0"
+    Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
+    With Selection.FormatConditions(1).Interior
+        .PatternColorIndex = xlAutomatic
+        .Color = 5296274
+        .TintAndShade = 0
+    End With
+    Selection.FormatConditions(1).StopIfTrue = False
+    Selection.FormatConditions.Add Type:=xlCellValue, Operator:=xlLess, _
+        Formula1:="=0"
+    Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
+    With Selection.FormatConditions(1).Interior
+        .PatternColorIndex = xlAutomatic
+        .Color = 255
+        .TintAndShade = 0
+    End With
+    Selection.FormatConditions(1).StopIfTrue = False
+Range("A1").Select
+Next s
+End Sub
